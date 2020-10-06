@@ -13,7 +13,6 @@ clients_lock = threading.Lock()
 connected = 0
 
 clients = {}
- a = 10
 
 def connectionLoop(sock):
    while True:
@@ -33,19 +32,19 @@ def connectionLoop(sock):
            # clients[addr]['color'] = 0
            # message = {"cmd": 0,"player":{"id":str(addr)}} #id 받아서 새로 추가    # "cmd": 0 - new player connected.
 
-            oldClientsInfo = ("cmd" : 2, "player" : []) #cmd :2 - 기존 클라 정보를 다 들고있음 - dictionary, "player" : []- 배열
+            oldClientsInfo = {"cmd" : 2, "player" : []} #cmd :2 - 기존 클라 정보를 다 들고있음 - dictionary, "player" : []- 배열
             for c in clients:
-               player = () # player dictionary 만듬
+               player = {} # player dictionary 만듬
                player["id"] = str(c) #c에는 clients의 key - ip, port가 들어있는걸 string converting 해서 player 의 id key에 줌
                player["color"] = clients[c]["color"] #clients의 c라는 key값으로 color라는 value를 가져옴  c - ip, port.
                oldClientsInfo["player"].append(player)  # player dictionary의 값들을 oldClientsInfo의 player key에 넣어줌
             oci = json.dumps(oldClientsInfo)    #oldClientsInfo를 json으로 만들어서 oci에 넣어줌
-            sock.sendto(bytes(oci,'utf8'), addr[0], addr[1]) #oci를 쏜다 클라한테, addr[0] - ip, addr[1] - port
+            sock.sendto(bytes(oci,'utf8'), (addr[0], addr[1])) #oci를 쏜다 클라한테, addr[0] - ip, addr[1] - port
 
-            clients[addr] = () #새로운 클라의 정보를 넣어줄 공간, 속을 비워줌
+            clients[addr] = {} #새로운 클라의 정보를 넣어줄 공간, 속을 비워줌
             clients[addr]['lastBeat'] = datetime.now()
-            clients[addr]['color'] = ("R" : 1, "G" : 1, "B" : 1) #새로운 색상을 줄 공간을 만듬. color의 key에 또다른 dictionary를 넣어줌
-            clients[addr]['position'] = ("x" : 0, "y" : 0, "z" : 0) #새로운 포지션을 줄 공간을 만듬
+            clients[addr]['color'] = {"R" : 1, "G" : 1, "B" : 1} #새로운 색상을 줄 공간을 만듬. color의 key에 또다른 dictionary를 넣어줌
+            clients[addr]['position'] = {"x" : 0, "y" : 0, "z" : 0} #새로운 포지션을 줄 공간을 만듬
 
             # for c in clients: #send 패킷 utf8타입의 m을 bytes로 형변환해서, c = [ip, port]
             #    sock.sendto(bytes(m,'utf8'), (c[0],c[1]))
