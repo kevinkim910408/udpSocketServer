@@ -13,6 +13,7 @@ clients_lock = threading.Lock()
 connected = 0
 
 clients = {}
+ a = 10
 
 def connectionLoop(sock):
    while True:
