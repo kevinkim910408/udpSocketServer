@@ -31,16 +31,19 @@ def connectionLoop(sock):
            # clients[addr]['lastBeat'] = datetime.now()
            # clients[addr]['color'] = 0
            # message = {"cmd": 0,"player":{"id":str(addr)}} #id 받아서 새로 추가    # "cmd": 0 - new player connected.
-
+            ########################################### GGive my addr to me ##############################################
+            connectedClient = {"cmd" : 3, "id": str(addr)}
+            cc = json.dumps(connectedClient)
+            sock.sendto(bytes(cc,'utf8'), (addr[0], addr[1]))
 
            ########################################### Give old clients' information to new clients ##############################################
 
-            oldClientsInfo = {"cmd" : 2, "player" : []} #cmd :2 - 기존 클라 정보를 다 들고있음 - dictionary, "player" : []- 배열
+            oldClientsInfo = {"cmd" : 2, "players" : []} #cmd :2 - 기존 클라 정보를 다 들고있음 - dictionary, "player" : []- 배열
             for c in clients:
                player = {} # player dictionary 만듬
                player["id"] = str(c) #c에는 clients의 key - ip, port가 들어있는걸 string converting 해서 player 의 id key에 줌
                player["color"] = clients[c]["color"] #clients의 c라는 key값으로 color라는 value를 가져옴  c - ip, port.
-               oldClientsInfo["player"].append(player)  # player dictionary의 값들을 oldClientsInfo의 player key에 넣어줌
+               oldClientsInfo["players"].append(player)  # player dictionary의 값들을 oldClientsInfo의 player key에 넣어줌
             oci = json.dumps(oldClientsInfo)    #oldClientsInfo를 json으로 만들어서 oci에 넣어줌
             sock.sendto(bytes(oci,'utf8'), (addr[0], addr[1])) #oci를 쏜다 클라한테, addr[0] - ip, addr[1] - port
 
