@@ -14,6 +14,13 @@ connected = 0
 
 clients = {}
 
+def IsFloat(s):
+   try:
+      float(s)
+      return True
+   except ValueError:
+      return False
+
 def connectionLoop(sock):
    while True:
       data, addr = sock.recvfrom(1024) #데이터(최대1024)를 받아서, date, addr에 넣어줌 --> 튜플type으로 리턴 --> 이렇게 [ bits, [IP, Port] ].
@@ -23,7 +30,17 @@ def connectionLoop(sock):
       if addr in clients:              # addr가 clients안에있으면 (dictionary)
          if 'heartbeat' in data:       # 'heartbeat' (object property)가 data 안에 있으면.  
             clients[addr]['lastBeat'] = datetime.now()  #lastBeat을 datetime.now() 으로 업데이트
-            
+
+            # clients send position to server
+         elif 'position' in data:
+            Pos = []
+            for num in data.split():
+               if IsFloat(num):
+                  Pos.append(float(num))
+            clients[addr]['position']["x"] = Pos[0]
+            clients[addr]['position']["y"] = Pos[1]
+            clients[addr]['position']["z"] = Pos[2]
+
       else:                            #addr이 없을때
          if 'connect' in data:
 
@@ -31,7 +48,7 @@ def connectionLoop(sock):
            # clients[addr]['lastBeat'] = datetime.now()
            # clients[addr]['color'] = 0
            # message = {"cmd": 0,"player":{"id":str(addr)}} #id 받아서 새로 추가    # "cmd": 0 - new player connected.
-            ########################################### GGive my addr to me ##############################################
+            ########################################### Give my addr to me ##############################################
             connectedClient = {"cmd" : 3, "id": str(addr)}
             cc = json.dumps(connectedClient)
             sock.sendto(bytes(cc,'utf8'), (addr[0], addr[1]))
@@ -43,6 +60,9 @@ def connectionLoop(sock):
                player = {} # player dictionary 만듬
                player["id"] = str(c) #c에는 clients의 key - ip, port가 들어있는걸 string converting 해서 player 의 id key에 줌
                player["color"] = clients[c]["color"] #clients의 c라는 key값으로 color라는 value를 가져옴  c - ip, port.
+               ### 여기서 position 가져와야함
+               player["position"] = clients[c]["position"] 
+              
                oldClientsInfo["players"].append(player)  # player dictionary의 값들을 oldClientsInfo의 player key에 넣어줌
             oci = json.dumps(oldClientsInfo)    #oldClientsInfo를 json으로 만들어서 oci에 넣어줌
             sock.sendto(bytes(oci,'utf8'), (addr[0], addr[1])) #oci를 쏜다 클라한테, addr[0] - ip, addr[1] - port
@@ -52,7 +72,9 @@ def connectionLoop(sock):
             newClientsInfo = {
                "cmd" : 0, 
               "id" : str(addr), 
-              "color" : {"R": 1, "G" : 1, "B" : 1}
+              "color" : {"R": 1, "G" : 1, "B" : 1},
+              ### 포지션을 여기서 줌
+              "position" : {"x" : 0, "y" : 0, "z" : 0}
             }
 
             nci = json.dumps(newClientsInfo)
@@ -91,13 +113,15 @@ def gameLoop(sock):
          clients[c]['color'] = {"R": random.random(), "G": random.random(), "B": random.random()}
          player['id'] = str(c)
          player['color'] = clients[c]['color']
+         ### give position here
+         player['position'] = clients[c]['position']
          GameState['players'].append(player)
       s=json.dumps(GameState)
       print(s)
       for c in clients:
          sock.sendto(bytes(s,'utf8'), (c[0],c[1]))
       clients_lock.release()
-      time.sleep(1)
+      time.sleep(0.3) 
 
 def main():
    port = 12345
